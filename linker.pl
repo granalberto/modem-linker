@@ -4,38 +4,38 @@ use strict;
 use warnings;
 use Device::Gsm;
 use Config::Simple;
-use feature qw/say switch/;
+use v5.10;
 
 my $action = shift;
 my $device = shift;
 
-my $cfg = new Config::Simple('linker.ini');
+my $config = $0 =~ s/\.pl$/\.ini/r;
 
-my %table = $cfg->vars;
+my $cfg = new Config::Simple($config);
 
-given ($action) {
+if ($action eq "CREATE") {
     
-    when ("CREATE") {
+    my $gsm = Device::Gsm->new(port => '/dev/' . $device);
     
-	my $gsm = Device::Gsm->new(port => '/dev/' . $device);
-	
-	$gsm->connect(baudrate => 9600) || die "no conecta\n";
-	
-	my $imei = $gsm->imei;
-	
-	chdir '/dev';
-	
-	system("ln -s $device $table{$imei}");
-	
-    }
+    $gsm->connect(baudrate => 9600) || die "no conecta\n";
+    
+    my $imei = $gsm->imei;
+    
+    chdir '/dev';
+    
+    my $name = $cfg->param($imei);
+    
+    system("ln -s  $device $name");
+    
+}
 
-    when ("DESTROY") {
-	
-	chdir '/dev';
-	
-	for (values %table) {
-	    system("rm $_") unless stat($device);
-	}
+
+if ($action eq "DESTROY") {
+    
+    chdir '/dev';
+    
+    for (values %{$cfg->vars}) {
+	system("rm $_") unless stat($device);
     }
 }
 
