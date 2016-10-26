@@ -3,17 +3,19 @@
 use strict;
 use warnings;
 use Device::Gsm;
+use Config::Simple;
 use feature qw/say switch/;
 
 my $action = shift;
 my $device = shift;
 
-my %table = (352224043125855 => 'digitel0',
-	     352214041729642 => 'movilnet0');
+my $cfg = new Config::Simple('linker.ini');
 
-given($action) {
+my %table = $cfg->vars;
+
+given ($action) {
     
-    when("CREATE") {
+    when ("CREATE") {
     
 	my $gsm = Device::Gsm->new(port => '/dev/' . $device);
 	
